@@ -31,7 +31,7 @@ Bun.serve({
         // check url params
         const code: string | null = reqSearchParams.get("code");
         if (state === null || code === null) {
-          return new Response(`Error, make sure "code" and "state" is correct in URL parameter`);
+          return new Response(`Bad URL parameters`, { status: 403 });
         }
 
         // get token
@@ -41,7 +41,7 @@ Bun.serve({
         tokenUrl.searchParams.set("client_secret", env.get("CLIENT_SECRET")!)
         const tokenResponse = await fetch(tokenUrl, { method: "POST" });
         if (tokenResponse.status !== 200) {
-          return new Response(`Something went wrong :(`);
+          return new Response(`Failed to retreive token`, { status: 502 });
         }
 
         const tokenResponseJSON: {
@@ -58,29 +58,30 @@ Bun.serve({
         })
 
 
-        return new Response(`Success! you may close this window`);
+        return new Response(`Success`);
 
       case "/token":
         // check state
         if (state === null) {
-          return new Response(`Error, make sure "code" and "state" is correct in URL parameter`);
+          return new Response(`Bad URL parameters`, { status: 403 });
         }
 
         // check state valid
         const token = stateTokenMap.get(state)
         if (token === undefined) {
-          return new Response(`Something went wrong :(`);
+          return new Response(`State not found`, { status: 404 });
         }
 
         stateTokenMap.delete(state)
 
-        const response = new Response(JSON.stringify(token));
-        response.headers.set("Content-Type", "application/json")
-
-        return response;
+        return new Response(JSON.stringify(token), {
+          headers: {
+            "Content-Type": "application/json"
+          }
+        });
 
       default:
-        return new Response(`404`)
+        return new Response(`Not found`, { status: 404 })
     }
   },
 });
