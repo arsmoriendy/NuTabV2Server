@@ -1,23 +1,34 @@
 const env: Map<string, string> = new Map;
-let envIsComplete = true;
+
+let requiredEnvComplete;
 [
-  // relevant environment variables
+  // relevant and required environment variables
   "PORT",
   "TOKEN_REDIRECT_URI",
-  "CLIENT_SECRET",
-  "URL_PREFIX"
+  "CLIENT_SECRET"
 ].forEach(e => {
   const val = Bun.env[e];
   if (val === undefined) {
     console.error(`Please define "${e}" environment variable`);
-    envIsComplete = false;
+    requiredEnvComplete = false;
     return
   }
   env.set(e, val)
 })
-if (!envIsComplete) process.exit(1)
+if (requiredEnvComplete === false) process.exit(1);
+
+[
+  // relevant but not required environment variables
+  "URL_PREFIX"
+].forEach(e => {
+  const val = Bun.env[e];
+  if (val === undefined) return;
+  env.set(e, val);
+});
 
 const stateTokenMap: Map<string, { accessToken: string, refreshToken: string }> = new Map([]);
+
+const urlPrefix = env.get("URL_PREFIX") ?? "";
 
 Bun.serve({
   port: env.get("PORT"),
@@ -27,7 +38,7 @@ Bun.serve({
     const state: string | null = reqSearchParams.get("state");
 
     switch (reqUrl.pathname) {
-      case env.get("URL_PREFIX") + "/auth":
+      case urlPrefix + "/auth":
 
         // check url params
         const code: string | null = reqSearchParams.get("code");
@@ -61,7 +72,7 @@ Bun.serve({
 
         return new Response(`Success`);
 
-      case env.get("URL_PREFIX") + "/token":
+      case urlPrefix + "/token":
         const headers = {
           "Access-Control-Allow-Origin": "*"
         }
