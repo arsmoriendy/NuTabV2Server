@@ -4,7 +4,8 @@ let envIsComplete = true;
   // relevant environment variables
   "PORT",
   "TOKEN_REDIRECT_URI",
-  "CLIENT_SECRET"
+  "CLIENT_SECRET",
+  "URL_PREFIX"
 ].forEach(e => {
   const val = Bun.env[e];
   if (val === undefined) {
@@ -26,7 +27,7 @@ Bun.serve({
     const state: string | null = reqSearchParams.get("state");
 
     switch (reqUrl.pathname) {
-      case "/auth":
+      case env.get("URL_PREFIX") + "/auth":
 
         // check url params
         const code: string | null = reqSearchParams.get("code");
@@ -60,7 +61,7 @@ Bun.serve({
 
         return new Response(`Success`);
 
-      case "/token":
+      case env.get("URL_PREFIX") + "/token":
         // check state
         if (state === null) {
           return new Response(`Bad URL parameters`, { status: 403 });
