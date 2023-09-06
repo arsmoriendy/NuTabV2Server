@@ -62,22 +62,27 @@ Bun.serve({
         return new Response(`Success`);
 
       case env.get("URL_PREFIX") + "/token":
+        const headers = {
+          "Access-Control-Allow-Origin": "*"
+        }
+
         // check state
         if (state === null) {
-          return new Response(`Bad URL parameters`, { status: 403 });
+          return new Response(`Bad URL parameters`, { status: 403, headers });
         }
 
         // check state valid
         const token = stateTokenMap.get(state)
         if (token === undefined) {
-          return new Response(`State not found`, { status: 404 });
+          return new Response(`State not found`, { status: 404, headers });
         }
 
         stateTokenMap.delete(state)
 
         return new Response(JSON.stringify(token), {
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            ...headers
           }
         });
 
